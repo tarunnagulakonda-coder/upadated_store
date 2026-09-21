@@ -1,0 +1,43 @@
+{% extends 'admin_base.html' %}
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+    <h2>ORDERS</h2>
+    {% for order in orders %}
+    <div class="glass-effect" style="margin-bottom: 20px; padding: 20px;">
+        <div style="display: flex; justify-content: space-between;">
+            <div>
+                <h3 style="margin-top:0;">ORDER #{{ order.id }}</h3>
+                <p><strong>Customer:</strong> {{ order.user.name }}</p>
+                <p><strong>Mobile:</strong> {{ order.user.mobile }}</p>
+                <p><strong>Area:</strong> {{ order.user.area }} - House No: {{ order.user.house_no }}</p>
+                <p><strong>Total:</strong> ₹{{ order.total_amount }}</p>
+                <p><strong>Date:</strong> {{ order.order_date.strftime('%d/%m/%Y') }}</p>
+            </div>
+            <div style="text-align: right;">
+                <h3 style="color: {% if order.status == 'Pending' %}#d35400{% else %}#27ae60{% endif %}; margin-top:0;">
+                    {{ order.status }}</h3>
+                <form method="POST" action="/admin/orders/{{ order.id }}/status" style="margin-top: 15px;">
+                    <select name="status" style="padding: 10px; border-radius: 5px; width:100%;">
+                        <option value="Pending" {% if order.status=='Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Confirmed" {% if order.status=='Confirmed' %}selected{% endif %}>Confirmed
+                        </option>
+                        <option value="Completed" {% if order.status=='Completed' %}selected{% endif %}>Completed
+                        </option>
+                        <option value="Cancelled" {% if order.status=='Cancelled' %}selected{% endif %}>Cancelled
+                        </option>
+                    </select>
+                    <button type="submit" class="primary-btn"
+                        style="margin-top: 10px; font-size: 0.9em; padding: 10px;">CHANGE STATUS</button>
+                </form>
+            </div>
+        </div>
+        <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; text-align: center;">
+            <a href="/profile/bills/{{ order.id }}" target="_blank"
+                style="text-decoration: none; color: #34495e; font-weight: bold;">[VIEW DETAILS / BILL]</a>
+        </div>
+    </div>
+    {% else %}
+    <p>No orders yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

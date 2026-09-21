@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Grocery Bill #{{ order.id }}</title>
+    <style>
+        body {
+            font-family: monospace;
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            line-height: 1.5;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .line {
+            border-bottom: 1px dashed #333;
+            margin: 10px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 5px 0;
+        }
+
+        th:nth-child(2),
+        td:nth-child(2),
+        th:nth-child(3),
+        td:nth-child(3) {
+            text-align: center;
+        }
+
+        .print-btn {
+            background: #2ECC71;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        @media print {
+            .print-btn {
+                display: none;
+            }
+
+            body {
+                border: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="center">
+        <h2>================================<br>GROCERY BILL<br>================================</h2>
+    </div>
+    <p>Order ID: #{{ order.id }}<br>Date: {{ order.order_date.strftime('%d/%m/%Y') }}</p>
+    <p>Customer: {{ order.user.name }}<br>Mobile: {{ order.user.mobile }}<br>Area: {{ order.user.area }}<br>House No: {{
+        order.user.house_no }}</p>
+    <div class="line"></div>
+    <table>
+        <tr>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Amount</th>
+        </tr>
+        {% for item in order.items %}
+        <tr>
+            <td>{{ item.product_name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>₹{{ item.price * item.quantity }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <div class="line"></div>
+    <h3>TOTAL <span style="float: right;">₹{{ order.total_amount }}</span></h3>
+    <div class="center" style="margin-top: 20px;">
+        <div class="line"></div>
+        <h4>Status: {{ order.status }}</h4>
+        <div class="line"></div>
+    </div>
+    <button class="print-btn" onclick="window.print()">PRINT BILL</button>
+</body>
+
+</html>

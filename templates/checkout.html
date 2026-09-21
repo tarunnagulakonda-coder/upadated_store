@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block header_title %}Checkout{% endblock %}
+{% block content %}
+
+<div class="checkout-container">
+    <div class="checkout-card glass-effect">
+        <h3>Delivery Details</h3>
+
+        <!-- Local store context -->
+        <div class="local-store-notice">
+            <span class="icon">📍</span> Order from your nearby store
+        </div>
+
+        <form id="checkoutForm" onsubmit="event.preventDefault(); placeOrder();">
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" value="User Name" readonly>
+                <!-- In reality, populate from session/User model if passed -->
+            </div>
+
+            <div class="form-group">
+                <label>Mobile Number</label>
+                <input type="text" value="+91 99999 99999" readonly>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group flex-1">
+                    <label>Area</label>
+                    <input type="text" value="Phase 1" readonly>
+                </div>
+                <div class="form-group flex-1">
+                    <label>House/Flat No</label>
+                    <input type="text" value="A-102" readonly>
+                </div>
+            </div>
+
+            <div class="checkout-summary">
+                <h4>Order Summary</h4>
+                <div class="summary-row total-row" style="margin-bottom:15px;">
+                    <span>Total Amount</span>
+                    <span id="checkoutTotal">₹...</span>
+                </div>
+            </div>
+
+            <button type="submit" id="orderBtn" class="primary-btn pulse">Place Order</button>
+        </form>
+    </div>
+</div>
+
+<!-- Simple script to fetch total for checkout -->
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const response = await fetch('/api/cart');
+            const data = await response.json();
+            let total = 0;
+            if (data.items) {
+                data.items.forEach(i => total += (i.price * i.quantity));
+            }
+            document.getElementById('checkoutTotal').innerText = '₹' + total;
+        } catch (e) { }
+    });
+</script>
+
+{% endblock %}

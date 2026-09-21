@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block header_title %}{{ product.name }}{% endblock %}
+{% block content %}
+<div class="product-detail-container">
+    <div class="product-img-large">
+        {{ '🛍️' }}
+    </div>
+
+    <div class="product-info-block">
+        <h2>{{ product.name }}</h2>
+        <p class="detail-price">₹{{ product.price }} / {{ product.unit }}</p>
+        <span class="stock-badge">{{ product.stock or 'Available' }}</span>
+
+        <div class="detail-section">
+            <h3>Description</h3>
+            <p>{{ product.description or 'No description available for this product.' }}</p>
+        </div>
+
+        <div class="detail-actions">
+            <!-- Reuse inline add logic from app.js -->
+            <div id="pd-action-{{ product.id }}">
+                <button class="primary-btn pulse" style="margin-top:20px; width:100%;"
+                    onclick="addToCartDetail(this, {{ product.id }})">
+                    Add to Cart
+                </button>
+                <div class="qty-control hidden" style="justify-content: center; margin-top:20px;">
+                    <button class="qty-btn" onclick="updateInlineQty(this, {{ product.id }}, 'dec')">−</button>
+                    <span class="qty-display" style="padding: 0 20px; font-size:1.2rem;">1</span>
+                    <button class="qty-btn" onclick="updateInlineQty(this, {{ product.id }}, 'inc')">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

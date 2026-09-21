@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block header_title %}Kirana Store{% endblock %}
+{% block content %}
+<div class="home-banner">
+    <h3>Local Delivery Available</h3>
+    <p>Fresh groceries delivered to your area</p>
+</div>
+
+<div class="section-container">
+    <h3 class="section-title">Shop by Category</h3>
+    <div class="category-grid">
+        {% for cat in categories %}
+        <a href="/categories/{{ cat.id }}" class="category-card interactive-card">
+            <div class="cat-icon">{{ cat.icon or '🛒' }}</div>
+            <span>{{ cat.name }}</span>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

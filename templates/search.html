@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block header_title %}Search{% endblock %}
+{% block content %}
+<div class="search-container">
+    <form class="search-form" method="GET" action="/search">
+        <input type="text" name="q" class="search-input" placeholder="Search products..." value="{{ q }}" autofocus>
+        <button type="submit" class="search-btn">🔍</button>
+    </form>
+</div>
+
+{% if q %}
+<div class="products-container">
+    <h4 style="margin-bottom:15px; color:#666;">Results for "{{ q }}"</h4>
+    {% if products %}
+    <div class="product-grid-mobile">
+        {% for prod in products %}
+        <div class="product-card interactive-card">
+
+            <div class="prod-emoji-img" onclick="window.location.href='/product/{{ prod.id }}'">🛒</div>
+
+            <div class="prod-details">
+                <h4 class="prod-name" onclick="window.location.href='/product/{{ prod.id }}'">{{ prod.name }}</h4>
+                <p class="prod-unit">{{ prod.unit }}</p>
+                <p class="prod-price">₹{{ prod.price }}</p>
+            </div>
+
+            <div class="prod-actions">
+                <button class="add-cart-btn pulse" onclick="addToCartInline(this, {{ prod.id }})">
+                    <span class="btn-text">+ Add</span>
+                </button>
+                <div class="qty-control hidden">
+                    <button class="qty-btn" onclick="updateInlineQty(this, {{ prod.id }}, 'dec')">−</button>
+                    <span class="qty-display">1</span>
+                    <button class="qty-btn" onclick="updateInlineQty(this, {{ prod.id }}, 'inc')">+</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="text-align:center; padding: 20px;">No products found for "{{ q }}"</p>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

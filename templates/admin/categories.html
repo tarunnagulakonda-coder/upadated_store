@@ -1,0 +1,63 @@
+{% extends 'admin_base.html' %}
+{% block content %}
+<h2>Manage Categories & Subcategories</h2>
+
+<div class="admin-grid" style="display: flex; gap: 20px; flex-wrap: wrap;">
+    <div style="flex:1; min-width: 300px;">
+        <h3>Add New</h3>
+        <form method="POST" action="{{ url_for('admin.categories') }}" class="glass-effect"
+            style="padding:20px; border-radius:8px;">
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" name="name" required style="width:100%; margin-bottom:10px;">
+            </div>
+            <div class="form-group">
+                <label>Icon (Emoji/URL)</label>
+                <input type="text" name="icon" style="width:100%; margin-bottom:10px;"
+                    placeholder="Optional emoji eg 🥬">
+            </div>
+            <div class="form-group">
+                <label>Parent Category (For Subcategories)</label>
+                <select name="parent_id" style="width:100%; margin-bottom:10px;">
+                    <option value="">None (Top Level Category)</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="primary-btn">Add Category</button>
+        </form>
+    </div>
+
+    <div style="flex:2; min-width: 300px;">
+        <h3>Existing Hierarchy</h3>
+        <ul style="list-style: none; padding: 0;">
+            {% for cat in categories %}
+            <li style="background:#fff; padding:15px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>{{ cat.icon }} {{ cat.name }}</strong>
+                    <form method="POST" action="{{ url_for('admin.delete_category', id=cat.id) }}"
+                        style="display:inline;">
+                        <button class="primary-btn"
+                            style="background:#e74c3c; width:auto; padding:5px 10px;">Delete</button>
+                    </form>
+                </div>
+
+                <ul style="list-style:none; padding-left:20px; margin-top:10px;">
+                    {% for sub in cat.subcategories %}
+                    <li style="padding:8px 0; border-top:1px solid #eee; display:flex; justify-content:space-between;">
+                        <span>{{ sub.icon }} {{ sub.name }}</span>
+                        <form method="POST" action="{{ url_for('admin.delete_category', id=sub.id) }}"
+                            style="display:inline;">
+                            <button style="background:none; border:none; color:#e74c3c; cursor:pointer;">del</button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

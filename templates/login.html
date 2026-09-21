@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome – Kirana Store</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="mobile-app-wrapper onboard-page">
+
+        <!-- Single scrollable form (hero banner removed) -->
+        <section class="onboard-body onboard-single">
+            <div class="onboard-eyebrow">WELCOME TO DAILY BASKET</div>
+            <h2 class="onboard-heading">Let's get you<br><span class="accent-serif">set up.</span></h2>
+            <p class="onboard-sub">Tell us where to bring your groceries.</p>
+
+            <form method="POST" action="/login">
+                <label class="onboard-label" for="name">Your name</label>
+                <input class="onboard-input" type="text" id="name" name="name" required
+                    placeholder="e.g. Priya Sharma">
+
+                <label class="onboard-label" for="mobile">Mobile number</label>
+                <div class="mobile-prefix-wrap">
+                    <span class="mobile-prefix">+91</span>
+                    <input class="onboard-input" type="tel" id="mobile" name="mobile" required pattern="\d{10}"
+                        placeholder="10-digit mobile number">
+                </div>
+
+                <label class="onboard-label" for="house_no">House number / address</label>
+                <input class="onboard-input" type="text" id="house_no" name="house_no" required
+                    placeholder="e.g. 12-4-56, Green Park">
+
+                <label class="onboard-label" for="area">Delivery area</label>
+                <select class="onboard-select" id="area" name="area" required>
+                    <option value="" disabled selected>Choose your area</option>
+                    <option value="Area 1">Area 1</option>
+                    <option value="Area 2">Area 2</option>
+                    <option value="Area 3">Area 3</option>
+                </select>
+
+                <button type="submit" class="primary-btn onboard-btn">Continue to store <span>→</span></button>
+            </form>
+
+            <p class="onboard-note">Your details stay private and are only used for delivery.</p>
+        </section>
+
+    </div>
+</body>
+
+</html>

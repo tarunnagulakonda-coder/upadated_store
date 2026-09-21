@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="profile-container glass-effect"
+    style="max-width: 400px; margin: 40px auto; padding: 30px; border-radius: 10px;">
+    <h2>My Profile</h2>
+    <form id="profileForm" onsubmit="updateProfile(event)">
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="profName" value="{{ user.name }}" required>
+        </div>
+        <div class="form-group">
+            <label>Area</label>
+            <select id="profArea" required>
+                <option value="Area 1" {% if user.area=='Area 1' %}selected{% endif %}>Area 1</option>
+                <option value="Area 2" {% if user.area=='Area 2' %}selected{% endif %}>Area 2</option>
+                <option value="Area 3" {% if user.area=='Area 3' %}selected{% endif %}>Area 3</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Mobile Number</label>
+            <input type="text" id="profMobile" value="{{ user.mobile }}" required pattern="\d{10}">
+        </div>
+        <div class="form-group">
+            <label>House Number</label>
+            <input type="text" id="profHouse" value="{{ user.house_no }}" required>
+        </div>
+        <button type="submit" class="primary-btn pulse-animation">EDIT PROFILE</button>
+    </form>
+</div>
+{% endblock %}

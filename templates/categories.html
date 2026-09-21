@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block header_title %}Categories{% endblock %}
+{% block content %}
+
+<div class="categories-list">
+    {% for cat in categories %}
+    <a href="/categories/{{ cat.id }}" class="cat-list-item interactive-card">
+        <span class="cat-icon">{{ cat.icon or '🛒' }}</span>
+        <span class="cat-name">{{ cat.name }}</span>
+        <span class="cat-arrow">→</span>
+    </a>
+    {% endfor %}
+</div>
+
+{% endblock %}

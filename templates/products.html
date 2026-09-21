@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block header_title %}{{ subcategory.name }}{% endblock %}
+{% block content %}
+
+<!-- Horizontal Subcategory Menu (Pills) -->
+<div class="subcategory-pills-wrap">
+    <div class="subcategory-pills">
+        {% for sib in siblings %}
+        <a href="/products/{{ sib.id }}" class="pill {% if sib.id == subcategory.id %}active{% endif %}">
+            {{ sib.name }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="products-container">
+    {% if products %}
+    <div class="product-grid-mobile">
+        {% for prod in products %}
+        <div class="product-card interactive-card">
+
+            <div class="prod-emoji-img" onclick="window.location.href='/product/{{ prod.id }}'">
+                {{ '🛒' }}
+            </div>
+
+            <div class="prod-details">
+                <h4 class="prod-name" onclick="window.location.href='/product/{{ prod.id }}'">{{ prod.name }}</h4>
+                <p class="prod-unit">{{ prod.unit }}</p>
+                <p class="prod-price">₹{{ prod.price }}</p>
+            </div>
+
+            <div class="prod-actions">
+                <button class="add-cart-btn pulse" onclick="addToCartInline(this, {{ prod.id }})">
+                    <span class="btn-text">+ Add</span>
+                </button>
+                <div class="qty-control hidden">
+                    <button class="qty-btn" onclick="updateInlineQty(this, {{ prod.id }}, 'dec')">−</button>
+                    <span class="qty-display">1</span>
+                    <button class="qty-btn" onclick="updateInlineQty(this, {{ prod.id }}, 'inc')">+</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="text-align:center; margin-top:20px; color:#888;">No products found.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

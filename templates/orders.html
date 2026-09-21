@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="orders-container" style="max-width: 800px; margin: 40px auto;">
+    <h2>Previous Orders</h2>
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+        {% for order in orders %}
+        <div class="order-card glass-effect" style="padding: 20px;">
+            <div class="order-header"
+                style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
+                <h3 style="margin: 0;">Order #{{ order.id }}</h3>
+                <span
+                    style="font-weight: bold; color: {% if order.status == 'Pending' %}#d35400{% else %}var(--primary-color){% endif %};">{{
+                    order.status }}</span>
+            </div>
+            <p><strong>Date:</strong> {{ order.order_date.strftime('%d %B %Y') }}</p>
+            <p><strong>Total:</strong> ₹{{ order.total_amount }}</p>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="add-btn" style="flex: 1;"
+                    onclick="window.location.href='/profile/orders/{{ order.id }}'">VIEW DETAILS</button>
+                <button class="add-btn" style="flex: 1; background: #eee; border-color: #ccc; color: #333;"
+                    onclick="window.open('/profile/bills/{{ order.id }}', '_blank')">VIEW BILL</button>
+            </div>
+        </div>
+        {% else %}
+        <p>You have no previous orders.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

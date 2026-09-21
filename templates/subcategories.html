@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block header_title %}{{ parent.name }}{% endblock %}
+{% block content %}
+
+<div class="categories-list">
+    {% for sub in subcategories %}
+    <a href="/products/{{ sub.id }}" class="cat-list-item interactive-card">
+        <span class="cat-icon">{{ sub.icon or '➡️' }}</span>
+        <span class="cat-name">{{ sub.name }}</span>
+    </a>
+    {% endfor %}
+    {% if not subcategories %}
+    <p style="text-align:center; margin-top:20px; color:#888;">No subcategories found.</p>
+    {% endif %}
+</div>
+
+{% endblock %}
