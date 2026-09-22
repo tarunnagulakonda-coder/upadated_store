@@ -11,6 +11,7 @@ from models.category import Category
 from models.product import Product
 from models.order import Order
 from models.banner import Banner
+from utils.product_images import save_product_image
 
 bp = Blueprint('admin', __name__)
 
@@ -59,14 +60,17 @@ def add_product():
         image_url = None
         if 'image' in request.files:
             file = request.files['image']
-            if file.filename != '':
-                filename = secure_filename(file.filename)
-                # Save just the name for simple relative referencing, directory must exist
-                upload_dir = 'static/uploads'
-                if not os.path.exists(upload_dir):
-                    os.makedirs(upload_dir)
-                file.save(os.path.join(upload_dir, filename))
-                image_url = filename
+            if file and file.filename != '':
+                try:
+                    # Validates (JPG/PNG/WebP, 5 MB), resizes to max 800x800
+                    # and compresses to WebP before anything is stored.
+                    # Optional: None when no file chosen. Only the optimized
+                    # path is saved in Product.image_url (no binary in DB).
+                    image_url = save_product_image(file)
+                except ValueError as exc:
+                    flash(str(exc), 'error')
+                    categories = Category.query.all()
+                    return render_template('admin/add_product.html', categories=categories)
                 
         prod = Product(
             name=name, category_id=category_id, subcategory_id=subcategory_id,

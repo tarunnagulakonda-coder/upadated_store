@@ -20,7 +20,11 @@
         <div class="product-card interactive-card">
 
             <div class="prod-emoji-img" onclick="window.location.href='/product/{{ prod.id }}'">
+                {% if prod.image_src %}
+                <img src="{{ url_for('static', filename=prod.image_src) if not prod.image_src.startswith(('http://', 'https://', 'data:')) else prod.image_src }}" alt="{{ prod.name }}" loading="lazy" decoding="async" style="width:100%; height:80px; object-fit:cover; border-radius:8px;" onerror="this.remove()">
+                {% else %}
                 {{ '🛒' }}
+                {% endif %}
             </div>
 
             <div class="prod-details">

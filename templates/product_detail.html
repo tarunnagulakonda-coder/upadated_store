@@ -3,7 +3,11 @@
 {% block content %}
 <div class="product-detail-container">
     <div class="product-img-large">
+        {% if product.image_src %}
+        <img src="{{ url_for('static', filename=product.image_src) if not product.image_src.startswith(('http://', 'https://', 'data:')) else product.image_src }}" alt="{{ product.name }}" loading="lazy" decoding="async" style="width:100%; max-height:320px; object-fit:cover; border-radius:12px;" onerror="this.remove()">
+        {% else %}
         {{ '🛍️' }}
+        {% endif %}
     </div>
 
     <div class="product-info-block">

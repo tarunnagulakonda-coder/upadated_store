@@ -12,22 +12,54 @@ from datetime import datetime
 
 app = create_app()
 
+
+def _ensure_admin():
+    """Create the admin row from env only if no admin exists. Never deletes."""
+    admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
+    admin_password = os.environ.get('ADMIN_PASSWORD', 'admin')
+    if Admin.query.filter_by(username=admin_username).first():
+        return
+    db.session.add(Admin(
+        username=admin_username,
+        password_hash=generate_password_hash(admin_password),
+    ))
+    db.session.commit()
+
 def seed_data():
     with app.app_context():
-        # Drop and Re-create all tables for a clean slate during development
-        db.drop_all()
-        db.create_all()
+        # SAFETY: seed.py must NEVER wipe production data.
+        # - Default behaviour is idempotent: only insert demo data when the
+        #   database is empty, and never call drop_all.
+        # - drop_all is only allowed for local development when the operator
+        #   explicitly sets ALLOW_SEED_RESET=true. It is refused whenever
+        #   DATABASE_URL points at Postgres, even with the flag, unless
+        #   ALLOW_SEED_RESET=force is set (manual recovery only).
+        raw_url = os.environ.get('DATABASE_URL', '')
+        is_postgres = raw_url.startswith(('postgres://', 'postgresql://', 'postgresql+pg8000://'))
+        reset_flag = os.environ.get('ALLOW_SEED_RESET', 'false').lower()
+        if reset_flag == 'true' and is_postgres:
+            print("Refusing drop_all on Postgres with ALLOW_SEED_RESET=true. Use ALLOW_SEED_RESET=force for manual recovery only.")
+            db.create_all()
+            return
+        if reset_flag not in ('true', 'force'):
+            # Idempotent seed: safe to run on Render without deleting anything.
+            db.create_all()
+            from models.category import Category as _Cat
+            from models.product import Product as _Prod
+            if _Cat.query.first() or _Prod.query.first():
+                print("Database already has data — seed skipped (no rows deleted).")
+                _ensure_admin()
+                return
+        else:
+            # Explicit local reset requested (ALLOW_SEED_RESET=true locally,
+            # or =force on Postgres for manual recovery).
+            db.drop_all()
+            db.create_all()
 
-        # Admin
-        admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
-        admin_password = os.environ.get('ADMIN_PASSWORD', 'admin')
-        new_admin = Admin(
-            username=admin_username, 
-            password_hash=generate_password_hash(admin_password)
-        )
-        db.session.add(new_admin)
-        
-        # Categories hierarchy
+        # Admin (idempotent: never duplicate, never delete)
+        _ensure_admin()
+
+        # Categories hierarchy (skip if already seeded)
         hierarchy = {
             "Fresh": {"icon": "🥬", "subs": ["Vegetables", "Fruits"]},
             "Dairy & Eggs": {"icon": "🥛", "subs": ["Milk", "Curd", "Butter", "Paneer"]},
