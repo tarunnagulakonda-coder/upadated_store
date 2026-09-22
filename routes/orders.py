@@ -21,6 +21,9 @@ def place_order():
         return jsonify({'success': False, 'message': 'Cart is empty'})
         
     total_amount = sum(item.product.price * item.quantity for item in cart.items)
+    min_amount = current_app.config.get('MIN_ORDER_AMOUNT', 100)
+    if total_amount < min_amount:
+        return jsonify({'success': False, 'message': f'Minimum order amount is ₹{min_amount} to continue'})
     
     # Store full delivery address
     address = f"{user.house_no}, {user.area}"
