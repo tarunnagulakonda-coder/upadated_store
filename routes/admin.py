@@ -1,12 +1,15 @@
 import os
+import time
+from datetime import datetime
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
-from flask import Blueprint, render_template, request, session, redirect, url_for, flash
+from flask import Blueprint, render_template, request, session, redirect, url_for, flash, current_app
 from models import db
 from models.admin import Admin
 from models.category import Category
 from models.product import Product
 from models.order import Order
+from models.banner import Banner
 
 bp = Blueprint('admin', __name__)
 
@@ -146,3 +149,132 @@ def update_order_status(id):
     db.session.commit()
     flash(f"Order #{order.id} status updated to {order.status}.", 'success')
     return redirect(url_for('admin.orders'))
+
+# ==============================
+# BANNERS (promotional carousel)
+# ==============================
+ALLOWED_BANNER_EXTS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
+
+def _banner_upload_dir():
+    upload_dir = os.path.join(current_app.static_folder, 'uploads', 'banners')
+    os.makedirs(upload_dir, exist_ok=True)
+    return upload_dir
+
+def _save_banner_image(file):
+    """Validate, optimize and save an uploaded banner image.
+    Returns the path relative to the static folder, or None."""
+    if not file or not file.filename:
+        return None
+    ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+    if ext not in ALLOWED_BANNER_EXTS:
+        return None
+    filename = f"{int(time.time())}_{secure_filename(file.filename)}"
+    filepath = os.path.join(_banner_upload_dir(), filename)
+    file.save(filepath)
+    # Optimize for fast loading: downscale wide images, compress
+    try:
+        from PIL import Image
+        img = Image.open(filepath)
+        if img.mode in ('RGBA', 'LA', 'P'):
+            img = img.convert('RGB')
+            filepath = os.path.splitext(filepath)[0] + '.jpg'
+            filename = os.path.splitext(filename)[0] + '.jpg'
+        if img.width > 900:
+            img = img.resize((900, int(img.height * 900 / img.width)), Image.LANCZOS)
+        img.save(filepath, optimize=True, quality=70)
+    except Exception:
+        pass  # keep the original file if optimization fails
+    return f"uploads/banners/{filename}"
+
+def _delete_banner_image(rel_path):
+    if not rel_path:
+        return
+    try:
+        full = os.path.join(current_app.static_folder, rel_path)
+        # Safety: only delete files inside the banners folder
+        if os.path.isfile(full) and 'banners' in rel_path.replace('\\', '/'):
+            os.remove(full)
+    except Exception:
+        pass
+
+def _parse_date(value):
+    value = (value or '').strip()
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, '%Y-%m-%d').date()
+    except ValueError:
+        return None
+
+def _read_banner_form(banner):
+    banner.title = (request.form.get('title') or '').strip()
+    banner.description = (request.form.get('description') or '').strip() or None
+    banner.offer_text = (request.form.get('offer_text') or '').strip() or None
+    banner.button_text = (request.form.get('button_text') or '').strip() or None
+    banner.redirect_url = (request.form.get('redirect_url') or '').strip() or None
+    status = request.form.get('status')
+    banner.status = status if status in ('Active', 'Inactive') else 'Active'
+    try:
+        banner.display_order = int(request.form.get('display_order') or 0)
+    except (TypeError, ValueError):
+        banner.display_order = 0
+    banner.start_date = _parse_date(request.form.get('start_date'))
+    banner.end_date = _parse_date(request.form.get('end_date'))
+
+@bp.route('/banners')
+def banners():
+    if not is_admin(): return redirect(url_for('admin.login'))
+    all_banners = Banner.query.order_by(Banner.display_order.asc(), Banner.id.asc()).all()
+    return render_template('admin/banners.html', banners=all_banners)
+
+@bp.route('/banners/add', methods=['POST'])
+def add_banner():
+    if not is_admin(): return redirect(url_for('admin.login'))
+    title = (request.form.get('title') or '').strip()
+    if not title:
+        flash("Banner title is required.", 'error')
+        return redirect(url_for('admin.banners'))
+    banner = Banner(title=title)
+    _read_banner_form(banner)
+    banner.image = _save_banner_image(request.files.get('image'))
+    db.session.add(banner)
+    db.session.commit()
+    flash("Banner added successfully.", 'success')
+    return redirect(url_for('admin.banners'))
+
+@bp.route('/banners/<int:id>/edit', methods=['GET', 'POST'])
+def edit_banner(id):
+    if not is_admin(): return redirect(url_for('admin.login'))
+    banner = Banner.query.get_or_404(id)
+    if request.method == 'POST':
+        _read_banner_form(banner)
+        if not banner.title:
+            flash("Banner title is required.", 'error')
+            return render_template('admin/edit_banner.html', banner=banner)
+        new_image = _save_banner_image(request.files.get('image'))
+        if new_image:
+            _delete_banner_image(banner.image)
+            banner.image = new_image
+        db.session.commit()
+        flash("Banner updated successfully.", 'success')
+        return redirect(url_for('admin.banners'))
+    return render_template('admin/edit_banner.html', banner=banner)
+
+@bp.route('/banners/<int:id>/toggle', methods=['POST'])
+def toggle_banner(id):
+    if not is_admin(): return redirect(url_for('admin.login'))
+    banner = Banner.query.get_or_404(id)
+    banner.status = 'Inactive' if banner.status == 'Active' else 'Active'
+    db.session.commit()
+    flash(f"Banner '{banner.title}' is now {banner.status}.", 'success')
+    return redirect(url_for('admin.banners'))
+
+@bp.route('/banners/<int:id>/delete', methods=['POST'])
+def delete_banner(id):
+    if not is_admin(): return redirect(url_for('admin.login'))
+    banner = Banner.query.get_or_404(id)
+    _delete_banner_image(banner.image)
+    db.session.delete(banner)
+    db.session.commit()
+    flash("Banner deleted.", 'success')
+    return redirect(url_for('admin.banners'))

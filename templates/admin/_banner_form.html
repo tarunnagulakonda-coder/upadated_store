@@ -1,0 +1,137 @@
+{# Shared banner add/edit form. Expects: form_action, banner (or None), submit_label. #}
+<form method="POST" action="{{ form_action }}" enctype="multipart/form-data" class="glass-effect"
+    style="padding:20px; border-radius:8px;">
+
+    <h3 style="margin:0 0 4px;">👁️ Live Preview</h3>
+    <p style="margin:0 0 10px; font-size:0.8rem; color:#888;">This is how the banner will look to customers.</p>
+    <div class="promo-section" style="padding:0 0 16px;">
+        <div class="promo-slide" id="pvSlide">
+            {% if banner and banner.image %}
+            <img id="pvImg" src="{{ url_for('static', filename=banner.image) }}" alt="preview" onerror="this.remove()">
+            {% else %}
+            <img id="pvImg" alt="" style="display:none;" onerror="this.style.display='none'">
+            {% endif %}
+            <div class="promo-overlay">
+                <span class="promo-badge" id="pvBadge" {% if not banner or not banner.offer_text %}style="display:none;"{% endif %}>{{ banner.offer_text if banner and banner.offer_text else '' }}</span>
+                <h3 id="pvTitle">{{ banner.title if banner and banner.title else 'Your banner title' }}</h3>
+                <p id="pvDesc">{{ banner.description if banner and banner.description else '' }}</p>
+                <span class="promo-btn" id="pvBtn" {% if not banner or not banner.button_text %}style="display:none;"{% endif %}>{{ banner.button_text if banner and banner.button_text else '' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Banner Image (optional)</label>
+        <input type="file" name="image" id="bannerImageInput" accept="image/png,image/jpeg,image/webp,image/gif" style="width:100%;">
+        <small style="color:#888;">Landscape photo works best. JPG/PNG/WebP, auto-optimized on upload.</small>
+    </div>
+
+    <div class="form-group">
+        <label>Title *</label>
+        <input type="text" name="title" id="bannerTitleInput" required maxlength="150" style="width:100%;"
+            value="{{ banner.title if banner else '' }}" placeholder="e.g. Weekend Special">
+    </div>
+
+    <div class="form-group">
+        <label>Short Description</label>
+        <input type="text" name="description" id="bannerDescInput" maxlength="300" style="width:100%;"
+            value="{{ banner.description if banner and banner.description else '' }}" placeholder="e.g. Fresh groceries at best prices">
+    </div>
+
+    <div style="display:flex; gap:15px;">
+        <div class="form-group" style="flex:1;">
+            <label>Offer Text</label>
+            <input type="text" name="offer_text" id="bannerOfferInput" maxlength="100" style="width:100%;"
+                value="{{ banner.offer_text if banner and banner.offer_text else '' }}" placeholder="e.g. 20% OFF">
+        </div>
+        <div class="form-group" style="flex:1;">
+            <label>Button Text</label>
+            <input type="text" name="button_text" id="bannerBtnInput" maxlength="50" style="width:100%;"
+                value="{{ banner.button_text if banner and banner.button_text else '' }}" placeholder="e.g. Shop Now">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Button Link (optional)</label>
+        <input type="text" name="redirect_url" maxlength="255" style="width:100%;"
+            value="{{ banner.redirect_url if banner and banner.redirect_url else '' }}" placeholder="e.g. /categories/2">
+        <small style="color:#888;">Where the button takes the customer. Leave empty for no link.</small>
+    </div>
+
+    <div style="display:flex; gap:15px;">
+        <div class="form-group" style="flex:1;">
+            <label>Status</label>
+            <select name="status" style="width:100%;">
+                <option value="Active" {% if not banner or banner.status == 'Active' %}selected{% endif %}>Active (visible)</option>
+                <option value="Inactive" {% if banner and banner.status == 'Inactive' %}selected{% endif %}>Inactive (hidden)</option>
+            </select>
+        </div>
+        <div class="form-group" style="flex:1;">
+            <label>Display Order</label>
+            <input type="number" name="display_order" min="0" style="width:100%;"
+                value="{{ banner.display_order if banner else 0 }}">
+            <small style="color:#888;">Lower number shows first.</small>
+        </div>
+    </div>
+
+    <div style="display:flex; gap:15px;">
+        <div class="form-group" style="flex:1;">
+            <label>Start Date (optional)</label>
+            <input type="date" name="start_date" style="width:100%;"
+                value="{{ banner.start_date.strftime('%Y-%m-%d') if banner and banner.start_date else '' }}">
+        </div>
+        <div class="form-group" style="flex:1;">
+            <label>End Date (optional)</label>
+            <input type="date" name="end_date" style="width:100%;"
+                value="{{ banner.end_date.strftime('%Y-%m-%d') if banner and banner.end_date else '' }}">
+        </div>
+    </div>
+
+    <button type="submit" class="primary-btn" style="margin-top:10px;">{{ submit_label }}</button>
+</form>
+
+<script>
+(function () {
+    function bind(id, fn) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('input', fn);
+    }
+    function setText(id, value, fallback) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = value || fallback || '';
+    }
+    function toggle(id, show) {
+        var el = document.getElementById(id);
+        if (el) el.style.display = show ? '' : 'none';
+    }
+    bind('bannerTitleInput', function (e) {
+        setText('pvTitle', e.target.value, 'Your banner title');
+    });
+    bind('bannerDescInput', function (e) {
+        setText('pvDesc', e.target.value, '');
+    });
+    bind('bannerOfferInput', function (e) {
+        setText('pvBadge', e.target.value, '');
+        toggle('pvBadge', !!e.target.value.trim());
+    });
+    bind('bannerBtnInput', function (e) {
+        setText('pvBtn', e.target.value, '');
+        toggle('pvBtn', !!e.target.value.trim());
+    });
+    var imgInput = document.getElementById('bannerImageInput');
+    if (imgInput) {
+        imgInput.addEventListener('change', function () {
+            var file = imgInput.files && imgInput.files[0];
+            var img = document.getElementById('pvImg');
+            if (!file || !img) return;
+            var reader = new FileReader();
+            reader.onload = function (ev) {
+                img.src = ev.target.result;
+                img.style.display = '';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+})();
+</script>

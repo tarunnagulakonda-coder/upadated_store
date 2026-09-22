@@ -14,13 +14,14 @@
 <body>
     <div class="mobile-app-wrapper">
 
-        <!-- TOP NAVIGATION BAR -->
+        <!-- FIXED TOP SEARCH BAR -->
         <nav class="navbar">
             <div class="nav-brand">
                 <a href="/">🏠 Kirana</a>
             </div>
 
             <div class="nav-search">
+                <span class="search-icon">🔍</span>
                 <input type="text" id="searchInput" placeholder="Search products..."
                     onkeydown="if(event.key==='Enter') handleSearch()">
             </div>
@@ -39,7 +40,7 @@
             </div>
         </nav>
 
-        <!-- MAIN CONTENT -->
+        <!-- SCROLLABLE MAIN CONTENT -->
         <main class="main-content">
             {% block content %}{% endblock %}
         </main>
@@ -47,7 +48,7 @@
         <!-- Toast Container -->
         <div id="toast" class="toast hidden"></div>
 
-        <!-- Bottom Navigation -->
+        <!-- FIXED BOTTOM NAVIGATION -->
         <nav class="bottom-nav">
             <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">
                 <span class="icon">🏠</span>
@@ -57,14 +58,17 @@
                 <span class="icon">📂</span>
                 <span class="label">Categories</span>
             </a>
-            <a href="/search" class="nav-item {% if request.path == '/search' %}active{% endif %}">
-                <span class="icon">🔍</span>
-                <span class="label">Search</span>
-            </a>
-            <a href="/cart"
-                class="nav-item {% if request.path == '/cart' or request.path == '/checkout' %}active{% endif %}">
+            <a href="/cart" class="nav-item {% if request.path == '/cart' or request.path == '/checkout' %}active{% endif %}">
                 <span class="icon">🛒</span>
                 <span class="label">Cart</span>
+            </a>
+            <a href="/profile/orders" class="nav-item {% if request.path.startswith('/profile/orders') %}active{% endif %}">
+                <span class="icon">📦</span>
+                <span class="label">Orders</span>
+            </a>
+            <a href="/profile" class="nav-item {% if request.path == '/profile' %}active{% endif %}">
+                <span class="icon">👤</span>
+                <span class="label">Profile</span>
             </a>
         </nav>
 

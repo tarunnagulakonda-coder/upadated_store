@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, session, redirect, url_for, jsonify
 from models.product import Product
 from models.category import Category
+from models.banner import Banner
 
 bp = Blueprint('products', __name__)
 
@@ -9,7 +10,8 @@ def home():
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
     categories = Category.query.filter_by(parent_id=None).all()
-    return render_template('home.html', categories=categories)
+    banners = Banner.visible()
+    return render_template('home.html', categories=categories, banners=banners)
 
 @bp.route('/products/<int:subcategory_id>')
 def products_by_subcategory(subcategory_id):

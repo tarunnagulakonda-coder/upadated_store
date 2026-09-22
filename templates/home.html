@@ -1,6 +1,39 @@
 {% extends 'base.html' %}
 {% block header_title %}Kirana Store{% endblock %}
 {% block content %}
+{% if banners %}
+<!-- PROMOTIONAL BANNERS (scrolls with content, managed from Admin → Banners) -->
+<section class="promo-section">
+    <div class="promo-carousel" id="promoCarousel">
+        {% for b in banners %}
+        <div class="promo-slide" {% if b.redirect_url and not b.button_text %}onclick="window.location.href='{{ b.redirect_url }}'" style="cursor:pointer;"{% endif %}>
+            {% if b.image %}
+            <img src="{{ url_for('static', filename=b.image) }}" alt="{{ b.title }}" loading="lazy" onerror="this.remove()">
+            {% endif %}
+            <div class="promo-overlay">
+                {% if b.offer_text %}<span class="promo-badge">{{ b.offer_text }}</span>{% endif %}
+                <h3>{{ b.title }}</h3>
+                {% if b.description %}<p>{{ b.description }}</p>{% endif %}
+                {% if b.button_text %}
+                    {% if b.redirect_url %}
+                    <a class="promo-btn" href="{{ b.redirect_url }}">{{ b.button_text }}</a>
+                    {% else %}
+                    <span class="promo-btn">{{ b.button_text }}</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% if banners|length > 1 %}
+    <div class="promo-dots" id="promoDots">
+        {% for b in banners %}
+        <span class="{% if loop.first %}active{% endif %}"></span>
+        {% endfor %}
+    </div>
+    {% endif %}
+</section>
+{% endif %}
 <div class="home-banner">
     <h3>Local Delivery Available</h3>
     <p>Fresh groceries delivered to your area</p>
@@ -17,4 +50,32 @@
         {% endfor %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{% if banners and banners|length > 1 %}
+<script>
+// Lightweight promo carousel dots: update the active dot as the user swipes/scrolls.
+(function () {
+    var track = document.getElementById('promoCarousel');
+    var dotsWrap = document.getElementById('promoDots');
+    if (!track || !dotsWrap) return;
+    var dots = dotsWrap.querySelectorAll('span');
+    var ticking = false;
+    track.addEventListener('scroll', function () {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(function () {
+            var w = track.clientWidth || 1;
+            var i = Math.round(track.scrollLeft / w);
+            i = Math.max(0, Math.min(dots.length - 1, i));
+            for (var d = 0; d < dots.length; d++) {
+                dots[d].classList.toggle('active', d === i);
+            }
+            ticking = false;
+        });
+    }, { passive: true });
+})();
+</script>
+{% endif %}
 {% endblock %}
