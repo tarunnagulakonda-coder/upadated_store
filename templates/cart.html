@@ -22,7 +22,19 @@
             <span id="cartTotalFinal">₹0</span>
         </div>
 
-        <button id="proceedToCheckoutBtn" class="primary-btn pulse" onclick="window.location.href='/checkout'"
+        <!-- Minimum order notice & progress banner -->
+        <div id="minOrderNotice" class="min-order-box hidden">
+            <div class="min-order-header">
+                <span id="minOrderIcon" class="min-order-icon">⚠️</span>
+                <span id="minOrderTitle" class="min-order-title">Minimum order is ₹100</span>
+            </div>
+            <p id="minOrderText" class="min-order-text">Add <strong>₹<span id="minOrderRemaining">0</span></strong> more to continue</p>
+            <div class="min-order-progress-track">
+                <div id="minOrderProgressFill" class="min-order-progress-fill" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <button id="proceedToCheckoutBtn" class="primary-btn pulse" onclick="proceedToCheckout()"
             style="margin-top:15px; width:100%;">Proceed to Checkout</button>
     </div>
 
