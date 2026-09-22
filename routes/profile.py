@@ -16,14 +16,20 @@ def profile():
 def update_profile():
     if 'user_id' not in session:
         return jsonify({'success': False})
-        
+
     user = User.query.get(session['user_id'])
     data = request.json
+    new_mobile = (data.get('mobile') or '').strip()
+    # Phone number is the unique identifier: reject numbers owned by another account
+    if new_mobile and new_mobile != user.mobile:
+        existing = User.query.filter_by(mobile=new_mobile).first()
+        if existing and existing.id != user.id:
+            return jsonify({'success': False, 'message': 'This phone number is already registered to another account.'})
+        user.mobile = new_mobile
     user.name = data.get('name', user.name)
     user.area = data.get('area', user.area)
-    user.mobile = data.get('mobile', user.mobile)
     user.house_no = data.get('house_no', user.house_no)
-    
+
     db.session.commit()
     return jsonify({'success': True})
 

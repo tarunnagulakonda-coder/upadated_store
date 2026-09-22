@@ -6,6 +6,7 @@ from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash, current_app
 from models import db
 from models.admin import Admin
+from models.user import User, UserLogin
 from models.category import Category
 from models.product import Product
 from models.order import Order
@@ -278,3 +279,24 @@ def delete_banner(id):
     db.session.commit()
     flash("Banner deleted.", 'success')
     return redirect(url_for('admin.banners'))
+
+# ==============================
+# USERS / CUSTOMERS
+# ==============================
+@bp.route('/users')
+def users():
+    if not is_admin(): return redirect(url_for('admin.login'))
+    import re as _re
+    q = (request.args.get('q') or '').strip()
+    query = User.query
+    if q:
+        digits = _re.sub(r'\D', '', q)
+        filters = [User.name.ilike(f'%{q}%')]
+        if digits:
+            filters.append(User.mobile.ilike(f'%{digits}%'))
+        query = query.filter(db.or_(*filters))
+    all_users = query.order_by(User.id.desc()).all()
+    total = User.query.count()
+    recent_logins = UserLogin.query.order_by(UserLogin.login_at.desc()).limit(10).all()
+    return render_template('admin/users.html', users=all_users, total=total, q=q,
+                           recent_logins=recent_logins)

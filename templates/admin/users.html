@@ -1,0 +1,116 @@
+{% extends 'admin_base.html' %}
+{% block content %}
+<style>
+    .users-total {
+        background: linear-gradient(135deg, #23473B, #2F5D4D);
+        color: #FFFBF2;
+        border-radius: 12px;
+        padding: 16px 20px;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    .users-total .num { font-size: 2rem; font-weight: 700; line-height: 1; }
+    .users-total .lbl { font-size: 0.8rem; opacity: 0.85; }
+    .users-search { display: flex; gap: 8px; margin-bottom: 15px; }
+    .users-search input {
+        flex: 1; padding: 10px 14px; border: 1px solid #E7DCC4; border-radius: 8px;
+        font-family: inherit; font-size: 0.9rem; background: #fff;
+    }
+    .users-search button {
+        background: #2F5D4D; color: #fff; border: none; border-radius: 8px;
+        padding: 0 18px; font-weight: 600; cursor: pointer; font-size: 0.9rem;
+    }
+    .users-table-wrap { overflow-x: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+    table.users-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 640px; }
+    table.users-table th {
+        background: #F4EDDE; color: #1E2E28; text-align: left; padding: 10px 12px;
+        font-weight: 700; white-space: nowrap;
+    }
+    table.users-table td { padding: 10px 12px; border-top: 1px solid #F0EAD8; vertical-align: top; }
+    table.users-table tr:first-child td { border-top: none; }
+    .u-phone { font-weight: 700; white-space: nowrap; }
+    .u-sub { color: #888; font-size: 0.75rem; }
+    .recent-list { list-style: none; margin: 0; padding: 0; font-size: 0.82rem; }
+    .recent-list li {
+        background: #fff; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; justify-content: space-between; gap: 10px;
+    }
+    @media (max-width: 640px) {
+        table.users-table { min-width: 0; }
+        table.users-table thead { display: none; }
+        table.users-table, table.users-table tbody, table.users-table tr, table.users-table td { display: block; width: 100%; }
+        table.users-table tr { border-bottom: 2px solid #F0EAD8; padding: 6px 0; }
+        table.users-table tr:first-child td { border-top: 1px solid #F0EAD8; }
+        table.users-table td { border: none; padding: 3px 12px; }
+        table.users-table td::before {
+            content: attr(data-label); display: block;
+            font-size: 0.68rem; font-weight: 700; color: #888; text-transform: uppercase;
+        }
+    }
+</style>
+
+<h2 style="margin-top:0;">👥 Users</h2>
+
+<div class="users-total">
+    <div class="lbl">Total Users</div>
+    <div class="num">{{ total }}</div>
+</div>
+
+<form class="users-search" method="GET" action="{{ url_for('admin.users') }}">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by name or phone number...">
+    <button type="submit">🔍</button>
+</form>
+
+{% if users %}
+<div class="users-table-wrap">
+    <table class="users-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Phone Number</th>
+                <th>Area</th>
+                <th>House No.</th>
+                <th>Registered</th>
+                <th>Last Login</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td data-label="Name" style="font-weight:600;">{{ u.name }}</td>
+                <td data-label="Phone"><span class="u-phone">📱 {{ u.mobile }}</span></td>
+                <td data-label="Area">{{ u.area }}</td>
+                <td data-label="House No.">{{ u.house_no }}</td>
+                <td data-label="Registered">{{ u.created_at.strftime('%d %b %Y') if u.created_at else '—' }}</td>
+                <td data-label="Last Login">
+                    {% if u.last_login %}
+                    {{ u.last_login.strftime('%d %b %Y, %H:%M') }}
+                    {% else %}
+                    <span class="u-sub">never</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p style="text-align:center; color:#888; padding:20px;">
+    {% if q %}No users match "{{ q }}".{% else %}No registered users yet.{% endif %}
+</p>
+{% endif %}
+
+{% if recent_logins %}
+<h3 style="margin:25px 0 10px;">🕘 Recent Logins</h3>
+<ul class="recent-list">
+    {% for l in recent_logins %}
+    <li>
+        <span><strong>{{ l.user.name if l.user else '—' }}</strong><br><span class="u-sub">{{ l.user.mobile if l.user else '' }}</span></span>
+        <span class="u-sub" style="white-space:nowrap;">{{ l.login_at.strftime('%d %b, %H:%M') }}</span>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<a href="{{ url_for('admin.dashboard') }}" style="display:block; text-align:center; margin:15px 0 20px; color:#2F5D4D; font-weight:600; text-decoration:none;">← Back to Dashboard</a>
+{% endblock %}

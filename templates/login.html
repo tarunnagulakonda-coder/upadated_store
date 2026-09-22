@@ -9,48 +9,133 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&display=swap"
         rel="stylesheet">
+    <style>
+        .auth-tabs {
+            display: flex;
+            background: var(--cream);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+        .auth-tab {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            border-radius: 9px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+        }
+        .auth-tab.active {
+            background: var(--off-white);
+            color: var(--primary-color);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        }
+        .auth-flash {
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .auth-flash-error {
+            background: #FDECEC;
+            border: 1px solid #F5C6C6;
+            color: #A93226;
+        }
+        .auth-flash-success {
+            background: #EDF7F2;
+            border: 1px solid #BEE4D0;
+            color: var(--primary-color);
+        }
+    </style>
 </head>
 
 <body>
     <div class="mobile-app-wrapper onboard-page">
 
-        <!-- Single scrollable form (hero banner removed) -->
+        <!-- Login / Register (phone is the unique identifier) -->
         <section class="onboard-body onboard-single">
             <div class="onboard-eyebrow">WELCOME TO DAILY BASKET</div>
             <h2 class="onboard-heading">Let's get you<br><span class="accent-serif">set up.</span></h2>
             <p class="onboard-sub">Tell us where to bring your groceries.</p>
 
-            <form method="POST" action="/login">
-                <label class="onboard-label" for="name">Your name</label>
-                <input class="onboard-input" type="text" id="name" name="name" required
-                    placeholder="e.g. Priya Sharma">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="auth-flash auth-flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
 
-                <label class="onboard-label" for="mobile">Mobile number</label>
-                <div class="mobile-prefix-wrap">
-                    <span class="mobile-prefix">+91</span>
-                    <input class="onboard-input" type="tel" id="mobile" name="mobile" required pattern="\d{10}"
-                        placeholder="10-digit mobile number">
-                </div>
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab {% if active_tab != 'register' %}active{% endif %}" id="tabLoginBtn" onclick="showAuthTab('login')">Login</button>
+                <button type="button" class="auth-tab {% if active_tab == 'register' %}active{% endif %}" id="tabRegisterBtn" onclick="showAuthTab('register')">New User</button>
+            </div>
 
-                <label class="onboard-label" for="house_no">House number / address</label>
-                <input class="onboard-input" type="text" id="house_no" name="house_no" required
-                    placeholder="e.g. 12-4-56, Green Park">
+            <!-- Option 1: Existing user login (phone number only) -->
+            <div id="authLogin" {% if active_tab == 'register' %}style="display:none;"{% endif %}>
+                <form method="POST" action="/login">
+                    <input type="hidden" name="mode" value="login">
+                    <label class="onboard-label" for="login_mobile">Phone number</label>
+                    <div class="mobile-prefix-wrap">
+                        <span class="mobile-prefix">+91</span>
+                        <input class="onboard-input" type="tel" id="login_mobile" name="mobile" required
+                            pattern="\d{10}" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number">
+                    </div>
+                    <button type="submit" class="primary-btn onboard-btn">Login <span>→</span></button>
+                </form>
+                <p class="onboard-note">Already registered? Just enter your phone number — we load your saved details.</p>
+            </div>
 
-                <label class="onboard-label" for="area">Delivery area</label>
-                <select class="onboard-select" id="area" name="area" required>
-                    <option value="" disabled selected>Choose your area</option>
-                    <option value="Area 1">Area 1</option>
-                    <option value="Area 2">Area 2</option>
-                    <option value="Area 3">Area 3</option>
-                </select>
+            <!-- Option 2: New user registration (existing flow) -->
+            <div id="authRegister" {% if active_tab != 'register' %}style="display:none;"{% endif %}>
+                <form method="POST" action="/login">
+                    <input type="hidden" name="mode" value="register">
+                    <label class="onboard-label" for="name">Your name</label>
+                    <input class="onboard-input" type="text" id="name" name="name" required
+                        placeholder="e.g. Priya Sharma">
 
-                <button type="submit" class="primary-btn onboard-btn">Continue to store <span>→</span></button>
-            </form>
+                    <label class="onboard-label" for="mobile">Mobile number</label>
+                    <div class="mobile-prefix-wrap">
+                        <span class="mobile-prefix">+91</span>
+                        <input class="onboard-input" type="tel" id="mobile" name="mobile" required pattern="\d{10}"
+                            maxlength="10" inputmode="numeric" placeholder="10-digit mobile number">
+                    </div>
 
-            <p class="onboard-note">Your details stay private and are only used for delivery.</p>
+                    <label class="onboard-label" for="house_no">House number / address</label>
+                    <input class="onboard-input" type="text" id="house_no" name="house_no" required
+                        placeholder="e.g. 12-4-56, Green Park">
+
+                    <label class="onboard-label" for="area">Delivery area</label>
+                    <select class="onboard-select" id="area" name="area" required>
+                        <option value="" disabled selected>Choose your area</option>
+                        <option value="Area 1">Area 1</option>
+                        <option value="Area 2">Area 2</option>
+                        <option value="Area 3">Area 3</option>
+                    </select>
+
+                    <button type="submit" class="primary-btn onboard-btn">Continue to store <span>→</span></button>
+                </form>
+                <p class="onboard-note">Your details stay private and are only used for delivery.</p>
+            </div>
         </section>
 
     </div>
+
+    <script>
+        function showAuthTab(which) {
+            var isLogin = which === 'login';
+            document.getElementById('authLogin').style.display = isLogin ? '' : 'none';
+            document.getElementById('authRegister').style.display = isLogin ? 'none' : '';
+            document.getElementById('tabLoginBtn').classList.toggle('active', isLogin);
+            document.getElementById('tabRegisterBtn').classList.toggle('active', !isLogin);
+        }
+    </script>
 </body>
 
 </html>
