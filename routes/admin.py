@@ -1,7 +1,7 @@
 import os
 import time
 from datetime import datetime
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash, current_app
 from models import db
@@ -300,3 +300,24 @@ def users():
     recent_logins = UserLogin.query.order_by(UserLogin.login_at.desc()).limit(10).all()
     return render_template('admin/users.html', users=all_users, total=total, q=q,
                            recent_logins=recent_logins)
+
+@bp.route('/change_password', methods=['GET', 'POST'])
+def change_password():
+    if not is_admin(): return redirect(url_for('admin.login'))
+    if request.method == 'POST':
+        current = request.form.get('current_password') or ''
+        new = request.form.get('new_password') or ''
+        confirm = request.form.get('confirm_password') or ''
+        admin = Admin.query.first()
+        if not admin or not check_password_hash(admin.password_hash, current):
+            flash("Current password is incorrect.", 'error')
+        elif len(new) < 4:
+            flash("New password must be at least 4 characters.", 'error')
+        elif new != confirm:
+            flash("New passwords do not match.", 'error')
+        else:
+            admin.password_hash = generate_password_hash(new)
+            db.session.commit()
+            flash("Admin password updated successfully.", 'success')
+            return redirect(url_for('admin.dashboard'))
+    return render_template('admin/change_password.html')
