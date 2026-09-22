@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, jsonify, redirect, request, session, url_for
 from config import Config
 from models import db
 
@@ -56,6 +56,31 @@ def create_app(config_class=Config):
     app.register_blueprint(admin_bp, url_prefix='/admin')
 
     _ensure_schema(app)
+
+    @app.before_request
+    def _validate_session_user():
+        """Drop stale login cookies instead of crashing.
+
+        If the database was reset/recreated while a browser still holds a
+        session cookie, user_id points at a row that no longer exists and
+        writes (e.g. creating a cart) blow up with FK violations (500).
+        Log the user out cleanly so they simply log in again.
+        """
+        if request.path.startswith(('/static', '/admin')):
+            return None
+        uid = session.get('user_id')
+        if uid is None:
+            return None
+        from models.user import User
+        if User.query.get(uid) is None:
+            session.pop('user_id', None)
+            if request.path.startswith('/api/'):
+                return jsonify({'success': False,
+                                'message': 'Session expired. Please login again.',
+                                'redirect': '/login'}), 401
+            if request.path not in ('/login', '/logout'):
+                return redirect(url_for('auth.login'))
+        return None
 
     return app
 
