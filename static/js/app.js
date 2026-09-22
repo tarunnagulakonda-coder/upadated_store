@@ -81,6 +81,7 @@ async function addToCartInline(btn, productId) {
             showToast("Added to cart ✓");
             updateCartBadge();
         } else {
+            if (data.redirect) { window.location.href = data.redirect; return; }
             alert(data.message || "Failed to add.");
             btn.innerText = "+ Add";
         }
