@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
-from flask import Blueprint, render_template, request, session, redirect, url_for, flash, current_app
+from flask import Blueprint, render_template, request, session, redirect, url_for, flash, current_app, jsonify
 from models import db
 from models.admin import Admin
 from models.user import User, UserLogin
@@ -99,6 +99,60 @@ def update_product_price(id):
     db.session.commit()
     flash(f"Price updated for {prod.name}.", 'success')
     return redirect(url_for('admin.edit_products'))
+
+@bp.route('/edit_products/<int:id>/delete', methods=['POST', 'DELETE'])
+def delete_product(id):
+    """Secure AJAX delete used by the swipe-to-delete interaction.
+
+    Only authenticated admins (session['is_admin']) may delete.
+    Removes stale cart references, preserves order history (blocks when
+    the product appears in past orders), deletes a local image file and
+    returns JSON so the list can update without a page refresh.
+    """
+    if not is_admin():
+        return jsonify({'success': False,
+                        'message': 'Unauthorized. Please login as admin.'}), 403
+    prod = Product.query.get(id)
+    if prod is None:
+        return jsonify({'success': False, 'message': 'Product not found.'}), 404
+    try:
+        from models.cart import CartItem
+        from models.order import OrderItem
+        # Active carts just lose the line; the product no longer exists.
+        CartItem.query.filter_by(product_id=id).delete(synchronize_session=False)
+        # Never silently rewrite past bills: block when order history exists.
+        if OrderItem.query.filter_by(product_id=id).count() > 0:
+            db.session.rollback()
+            return jsonify({'success': False,
+                            'message': 'Cannot delete: product exists in order history.'}), 409
+        image_url = prod.image_url
+        name = prod.name
+        db.session.delete(prod)
+        db.session.commit()
+        # Best-effort cleanup of the local optimized image copy only.
+        try:
+            if image_url:
+                value = (image_url or '').strip()
+                if not value.startswith(('http://', 'https://', 'data:')):
+                    normalized = value.replace('\\', '/').lstrip('/')
+                    if normalized.startswith('uploads/'):
+                        rel = normalized
+                    else:
+                        rel = f'uploads/{normalized}'
+                    full = os.path.join(current_app.static_folder, rel)
+                    safe_root = os.path.join(current_app.static_folder, 'uploads', 'products')
+                    if os.path.isfile(full) and os.path.abspath(full).startswith(
+                            os.path.abspath(safe_root)):
+                        os.remove(full)
+        except Exception:
+            pass  # image cleanup must never fail the delete
+        return jsonify({'success': True,
+                        'message': 'Product deleted successfully.',
+                        'id': id, 'name': name}), 200
+    except Exception:
+        db.session.rollback()
+        return jsonify({'success': False,
+                        'message': 'Failed to delete product. Please try again.'}), 500
 
 @bp.route('/categories', methods=['GET', 'POST'])
 def categories():
