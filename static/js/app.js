@@ -1,5 +1,7 @@
 // Global state for items in cart
 let cartItemsState = {}; // { product_id: quantity }
+const MIN_ORDER_AMOUNT = 100;
+let currentCartTotal = 0;
 
 // Navbar search handler
 function handleSearch() {
@@ -190,12 +192,65 @@ async function loadCartPage() {
         });
 
         list.innerHTML = html;
+        currentCartTotal = total;
         document.getElementById('cartTotalDisplay').innerText = '₹' + total;
         document.getElementById('cartTotalFinal').innerText = '₹' + total;
+
+        const minNotice = document.getElementById('minOrderNotice');
+        const checkoutBtn = document.getElementById('proceedToCheckoutBtn');
+        const progressFill = document.getElementById('minOrderProgressFill');
+        const minOrderRemaining = document.getElementById('minOrderRemaining');
+        const minOrderTitle = document.getElementById('minOrderTitle');
+        const minOrderText = document.getElementById('minOrderText');
+        const minOrderIcon = document.getElementById('minOrderIcon');
+
+        if (minNotice) {
+            minNotice.classList.remove('hidden');
+            const percent = Math.min(100, Math.round((total / MIN_ORDER_AMOUNT) * 100));
+            if (progressFill) progressFill.style.width = percent + '%';
+
+            if (total < MIN_ORDER_AMOUNT) {
+                const diff = MIN_ORDER_AMOUNT - total;
+                if (minOrderRemaining) minOrderRemaining.innerText = diff;
+                if (minOrderTitle) minOrderTitle.innerText = `Minimum order is ₹${MIN_ORDER_AMOUNT}`;
+                if (minOrderText) minOrderText.innerHTML = `Add <strong>₹${diff}</strong> more to continue to checkout`;
+                if (minOrderIcon) minOrderIcon.innerText = '⚠️';
+                minNotice.classList.remove('success');
+                minNotice.classList.add('warning');
+
+                if (checkoutBtn) {
+                    checkoutBtn.classList.add('btn-disabled');
+                    checkoutBtn.classList.remove('pulse');
+                    checkoutBtn.innerText = `Add ₹${diff} more to Checkout`;
+                }
+            } else {
+                if (minOrderTitle) minOrderTitle.innerText = `Minimum order reached!`;
+                if (minOrderText) minOrderText.innerHTML = `You can now proceed to checkout`;
+                if (minOrderIcon) minOrderIcon.innerText = '✅';
+                minNotice.classList.remove('warning');
+                minNotice.classList.add('success');
+
+                if (checkoutBtn) {
+                    checkoutBtn.classList.remove('btn-disabled');
+                    checkoutBtn.classList.add('pulse');
+                    checkoutBtn.innerText = `Proceed to Checkout`;
+                }
+            }
+        }
+
         summary.classList.remove('hidden');
         emptyMsg.classList.add('hidden');
 
     } catch (e) { }
+}
+
+function proceedToCheckout() {
+    if (currentCartTotal < MIN_ORDER_AMOUNT) {
+        const diff = MIN_ORDER_AMOUNT - currentCartTotal;
+        showToast(`Minimum order is ₹${MIN_ORDER_AMOUNT}. Add ₹${diff} more to continue.`);
+        return;
+    }
+    window.location.href = '/checkout';
 }
 
 async function updateCartItemPage(cartItemId, action) {
@@ -215,8 +270,10 @@ async function updateCartItemPage(cartItemId, action) {
 // -------------------------------------------------------------------
 async function placeOrder() {
     const btn = document.getElementById('orderBtn');
-    btn.disabled = true;
-    btn.innerText = "Processing...";
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = "Processing...";
+    }
 
     try {
         const response = await fetch('/api/orders', { method: 'POST' });
@@ -228,13 +285,18 @@ async function placeOrder() {
                 window.location.href = data.whatsapp_url;
             }, 1000);
         } else {
+            showToast(data.message || "Error placing order");
             alert(data.message || "Error placing order");
-            btn.disabled = false;
-            btn.innerText = "Place Order";
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = "Place Order";
+            }
         }
     } catch (e) {
         alert("An error occurred");
-        btn.disabled = false;
-        btn.innerText = "Place Order";
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = "Place Order";
+        }
     }
 }
