@@ -14,23 +14,22 @@
         <form id="checkoutForm" onsubmit="event.preventDefault(); placeOrder();">
             <div class="form-group">
                 <label>Name</label>
-                <input type="text" value="User Name" readonly>
-                <!-- In reality, populate from session/User model if passed -->
+                <input type="text" value="{{ user.name if user else 'User Name' }}" readonly>
             </div>
 
             <div class="form-group">
                 <label>Mobile Number</label>
-                <input type="text" value="+91 99999 99999" readonly>
+                <input type="text" value="{{ user.mobile if user else '+91 99999 99999' }}" readonly>
             </div>
 
             <div class="form-row">
                 <div class="form-group flex-1">
                     <label>Area</label>
-                    <input type="text" value="Phase 1" readonly>
+                    <input type="text" value="{{ user.area if user else 'Phase 1' }}" readonly>
                 </div>
                 <div class="form-group flex-1">
                     <label>House/Flat No</label>
-                    <input type="text" value="A-102" readonly>
+                    <input type="text" value="{{ user.house_no if user else 'A-102' }}" readonly>
                 </div>
             </div>
 
@@ -38,7 +37,7 @@
                 <h4>Order Summary</h4>
                 <div class="summary-row total-row" style="margin-bottom:15px;">
                     <span>Total Amount</span>
-                    <span id="checkoutTotal">₹...</span>
+                    <span id="checkoutTotal">₹{{ total if total else '...' }}</span>
                 </div>
             </div>
 
@@ -47,7 +46,7 @@
     </div>
 </div>
 
-<!-- Simple script to fetch total for checkout -->
+<!-- Script to verify total and guard checkout -->
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
         try {
@@ -56,6 +55,10 @@
             let total = 0;
             if (data.items) {
                 data.items.forEach(i => total += (i.price * i.quantity));
+            }
+            if (total < 100) {
+                window.location.href = '/cart';
+                return;
             }
             document.getElementById('checkoutTotal').innerText = '₹' + total;
         } catch (e) { }
